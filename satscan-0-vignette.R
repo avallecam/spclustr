@@ -6,8 +6,8 @@
 # EN LA FUNCIÓN satscan()
 # EL ARGUMENTO sslocation = "" DEBE TENER LA RUTA 
 # A LA UBICACIÓN DE LA CARPETA QUE CONTIENE 
-# EL SOFTWARE EN VUESTROS COMPUTADORES "C:/Program Files/SaTScan" 
-
+# EL SOFTWARE EN VUESTROS COMPUTADORES mysatscanloc 
+mysatscanloc <- "C:/Program Files (x86)/SaTScan"
 
 # (2)
 # Recomiendo ejecutar en conjunto,
@@ -66,7 +66,7 @@ write.ss.prm(td, "NHumberside")
 
 # run SaTScan --------
 # ojo: sslocation tiene que ser seteado de acuerdo al computador local
-NHumberside = satscan(td, "NHumberside", sslocation="C:/Program Files/SaTScan")
+NHumberside = satscan(td, "NHumberside", sslocation=mysatscanloc)
 
 # analyze the results from SaTScan --------------
 summary(NHumberside)
@@ -240,7 +240,7 @@ write.ss.prm(td, "NHumberside")
 
 # run SaTScan --------
 # ojo: sslocation tiene que ser seteado de acuerdo al computador local
-NHumberside = satscan(td, "NHumberside", sslocation="C:/Program Files/SaTScan")
+NHumberside = satscan(td, "NHumberside", sslocation=mysatscanloc)
 
 # analyze the results from SaTScan --------------
 summary(NHumberside)
@@ -351,7 +351,7 @@ ss.options(list(CaseFile="NM.cas",StartDate="1973/1/1",EndDate="1991/12/31",
 ss.options(c("NonCompactnessPenalty=0", "ReportGiniClusters=n", "LogRunToHistoryFile=n"))
 
 write.ss.prm(td,"testnm")
-testnm = satscan(td,"testnm", sslocation="C:/Program Files/SaTScan")
+testnm = satscan(td,"testnm", sslocation=mysatscanloc)
 summary(testnm)
 
 # explore output ----------------------------------------------------------
@@ -417,7 +417,7 @@ ss.options(list(CaseFile="NYS.cas",StartDate="2009/1/1",EndDate="2009/12/31",
 ss.options(c("NonCompactnessPenalty=0", "ReportGiniClusters=n", "LogRunToHistoryFile=n"))
 
 write.ss.prm(td,"testnys")
-testnys = satscan(td,"testnys", sslocation="C:/Program Files/SaTScan")
+testnys = satscan(td,"testnys", sslocation=mysatscanloc)
 summary(testnys)
 
 summary.default(testnys)
