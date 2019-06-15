@@ -6,4 +6,5 @@ packages*
 zungaro*
 *.graph
 gmrf*
-.Rproj.user
+*.Rproj.user
+*.Rhistory
