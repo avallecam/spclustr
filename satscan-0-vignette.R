@@ -16,9 +16,14 @@ mysatscanloc <- "C:/Program Files (x86)/SaTScan"
 # write, invisible, ss.options, write.ss, satscan y summary
 # al no hacerlo, incorrectamente sale error.
 
+# (3)
+# Accede a la lista de parámetros y los números de sus opciones
+ss.options(reset=TRUE)
+
 # paquetes ----------------------------------------------------------------
 
 library(tidyverse)
+library(janitor)
 library(rsatscan)
 theme_set(theme_bw()) #fondo blanco y negro del ggplot
 
@@ -33,6 +38,8 @@ td = tempdir()
 # video tutorial https://vimeo.com/123859199
 
 # _DATA: NHumbersidegeo -----------------------------------
+
+# _(point-pattern) (binomial/year) ---------------------------------------------------------
 
 # _METHOD: bernoulli pure spatial -------------------------------------------
 
@@ -51,12 +58,14 @@ write.geo(NHumbersidegeo, td, "NHumberside")
 #reset SaTScan parameters ------------
 invisible(ss.options(reset=TRUE))
 
-#set SaTScan parameters ------------
+#set SaTScan parameters ------------ 
 ss.options(list(CaseFile="NHumberside.cas", ControlFile="NHumberside.ctl"))
-ss.options(list(PrecisionCaseTimes=0, StartDate="2001/11/1", EndDate="2001/11/24"))
+ss.options(list(PrecisionCaseTimes=0, #none!
+                StartDate="2001/11/1", EndDate="2001/11/24")) #range days!
 ss.options(list(CoordinatesFile="NHumberside.geo", CoordinatesType=0, ModelType=1)) #bernoulli #lat/lon 1
 #ss.options(list(CoordinatesFile="NHumberside.geo", CoordinatesType=0, ModelType=6)) #discrete poisson
-ss.options(list(TimeAggregationUnits = 3, NonCompactnessPenalty=0))
+ss.options(list(TimeAggregationUnits = 3, #day!
+                NonCompactnessPenalty=0))
 ss.options(list(ReportGiniClusters="n", LogRunToHistoryFile="n"))
 ss.options(list(OutputShapefiles="y", OutputTemporalGraphHTML="y")) #outputfiles
 ss.options(list(SpatialWindowShapeType=0)) #0 circullar, 1 elliptical
@@ -158,6 +167,8 @@ file.remove(paste0(td,"/NHumberside.geo"))
 # https://assets.datacamp.com/production/repositories/748/datasets/6b32a67b58072c2c181daf2dae81d5944934fbea/pcrime-spatstat.rds
 
 # _DATA violent crime ----------------------------------------------------
+
+# _(point-pattern) (binomial/year) --------------------------------------------------------
 
 # _METHOD: bernoulli pure spatial -------------------------------------------
 
@@ -328,15 +339,27 @@ file.remove(paste0(td,"/NHumberside.geo"))
 # https://cran.r-project.org/web/packages/rsatscan/vignettes/rsatscan.html
 # video tutorial https://vimeo.com/123859199
 
-# _DATA: Brain Cancer cases NM -----------------------------------
+# _DATA: Brain Cancer cases NMex -----------------------------------
+
+# _(areal data) (count/population/year/covariates) ------------------------------------------------------------
 
 # _METHOD: poisson space-time --------------------------------------------------------------
 
 # input files -------------------------------------------------------------
 
-head(NMcas) #NMcas %>% as_tibble() %>% count(cases)
-head(NMgeo)
-head(NMpop)
+head(NMcas) #base nominal
+head(NMgeo) #centroide de cada condado
+head(NMpop) #base consolidada
+
+#casos
+#base por sujeto (año colecta, grupo de edad y sexo)
+#eventos duplicados son registros distintos
+NMcas %>% as_tibble() %>% clean_names() %>% arrange(year,county,agegroup)
+#controles
+#base agregada con denominador por estrato (quinquenio y sexo) y año
+#tres años de datos
+NMpop %>% as_tibble() %>% clean_names() %>% arrange(year,county,agegroup) %>% print(n=37)
+NMpop %>% as_tibble() %>% clean_names() %>% count(county,year) # cada 9 años
 
 write.cas(NMcas, td,"NM")
 write.geo(NMgeo, td,"NM")
@@ -347,7 +370,12 @@ write.pop(NMpop, td,"NM")
 invisible(ss.options(reset=TRUE))
 ss.options(list(CaseFile="NM.cas",StartDate="1973/1/1",EndDate="1991/12/31", 
                 PopulationFile="NM.pop",
-                CoordinatesFile="NM.geo", CoordinatesType=0, AnalysisType=3))
+                CoordinatesFile="NM.geo", CoordinatesType=0, 
+                #3=Retrospective Space-Time
+                AnalysisType=3#,
+                #0=Discrete Poisson
+                #ModelType=0
+                ))
 ss.options(c("NonCompactnessPenalty=0", "ReportGiniClusters=n", "LogRunToHistoryFile=n"))
 
 write.ss.prm(td,"testnm")
@@ -389,6 +417,8 @@ file.remove(paste0(td,"/NM.geo"))
 
 # _DATA: Breast Cancer cases NYC -----------------------------------
 
+# _(areal data) (count/expected/year) -----------------------------------------
+
 # _METHOD: poisson discrete time ---------------------------------------------------
 
 # import out data ---------------------------------------------------------
@@ -400,6 +430,9 @@ NYSgeo <- read.table("data-satscan/Coordinates.geo",sep=" ",header=F)
 head(NYScas)
 head(NYSgeo)
 head(NYSpop)
+
+NYSpop %>% as_tibble() %>% count(V2)
+NYScas %>% as_tibble() %>% count(V3)
 
 write.cas(NYScas, td,"NYS")
 write.geo(NYSgeo, td,"NYS")
@@ -426,3 +459,120 @@ summary.default(testnys)
 # explore output ----------------------------------------------------------
 
 
+# o -----------------------------------------------------------------------
+
+# _VIGNETTE SatScan ----------------------------------------------------------------
+# https://cran.r-project.org/web/packages/rsatscan/vignettes/rsatscan.html
+# video tutorial https://vimeo.com/123859199
+
+# _DATA: Fever cases NYC -----------------------------------
+
+# _(areal data) (caso/fecha) ------------------------------------------------------------
+
+# _METHOD: space-time permutation --------------------------------------------------------------
+
+# input files -------------------------------------------------------------
+
+head(NYCfevercas) #base nominal
+head(NYCfevergeo) #centroide de cada condado
+#head(NMpop) #base consolidada
+
+#casos
+# 1 por día, filas unicas
+NYCfevercas %>% as_tibble() %>% skimr::skim()
+NYCfevercas %>% as_tibble() %>% 
+  mutate(date=lubridate::as_date(date)) %>% 
+  summarise_at(.vars = vars(date),.funs = c("min","max"))
+
+write.cas(NYCfevercas, td,"NM")
+write.geo(NYCfevergeo, td,"NM")
+#write.pop(NMpop, td,"NM")
+
+# set parameters ----------------------------------------------------------
+
+invisible(ss.options(reset=TRUE))
+ss.options(list(CaseFile="NM.cas",
+                StartDate="2001/11/1",EndDate="2001/11/24", 
+                #PopulationFile="NM.pop",
+                CoordinatesFile="NM.geo", 
+                #latitud longitud
+                CoordinatesType=1, 
+                #4=Prospective Space-Time
+                AnalysisType=4, 
+                #2=Space-Time Permutation
+                ModelType=2, 
+                #3=Day
+                TimeAggregationUnits=3,
+                #time
+                PrecisionCaseTimes=3, #3:day
+                #MaxTemporalSizeInterpretation=1, #0:percentages, 1:time 
+                #MaxTemporalSize=7, #maximum temporal cluster size (<=90%) ¿?
+                #
+                #UseDistanceFromCenterOption="y",
+                #MaxSpatialSizeInDistanceFromCenter=3, 
+                #NonCompactnessPenalty=0,
+                #
+                #ProspectiveStartDate="2001/11/24", 
+                ReportGiniClusters="n", 
+                LogRunToHistoryFile="n"
+))
+#ss.options(c("NonCompactnessPenalty=0", "ReportGiniClusters=n", "LogRunToHistoryFile=n"))
+
+write.ss.prm(td,"testnm")
+testnm = satscan(td,"testnm", sslocation=mysatscanloc)
+summary(testnm)
+summary.default(testnm)
+#
+testnm$col #summary of each cluster + radius + number of locations per cluster + LRT significance + RR
+head(testnm$rr) #relative risk for each location
+head(testnm$gis) #locations within clusters
+head(testnm$llr) #likelihood ratio test ¿permutations?
+testnm$sci #summary of each cluster + percantage of cases
+sp::plot(testnm$shapeclust) #spatial polygon df #not available
+#testnm$prm
+
+
+
+# o -----------------------------------------------------------------------
+
+# some key parameters -----------------------------------------------------
+
+#[Analysis]  
+#
+#analysis type
+#"AnalysisType=1"
+# 	1=Purely Spatial
+# 	2=Purely Temporal
+# 	3=Retrospective Space-Time
+# 	4=Prospective Space-Time
+# 	5=Spatial Variation in Temporal Trends
+# 	6=Prospective Purely Temporal   
+
+#model type
+#"ModelType=0"
+# 	0=Discrete Poisson
+# 	1=Bernoulli
+# 	2=Space-Time Permutation
+# 	3=Ordinal
+# 	4=Exponential
+# 	5=Normal
+# 	6=Continuous Poisson
+# 	7=Multinomial
+
+#scan areas
+#"ScanAreas=1"
+# 	1=High Rates(Poison,Bernoulli,STP); High Values(Ordinal,Normal); Short Survival(Exponential)
+# 	2=Low Rates(Poison,Bernoulli,STP); Low Values(Ordinal,Normal); Long Survival(Exponential)
+# 	3=Both Areas
+
+#time aggregation units
+#"TimeAggregationUnits=1"
+# 	0=None
+# 	1=Year
+# 	2=Month
+# 	3=Day
+# 	4=Generic
+#
+# time aggregation length
+# TimeAggregationLength=1
+#   Positive Integer
