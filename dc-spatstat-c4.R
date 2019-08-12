@@ -1,5 +1,5 @@
 set.seed(33)
-# GEOSTATISTICAL DATA ----------------------------------------------------------
+# _GEOSTATISTICAL DATA ----------------------------------------------------------
 
 # Load the spatstat package
 library(tidyverse)

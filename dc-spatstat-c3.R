@@ -13,6 +13,7 @@ library(cartogram)
 library(rgeos) #gArea to calculate area of geometry
 library(spdep) #spatial dependency or correlation
 theme_set(theme_bw())
+list.files("data-dc/")
 
 # import data -------------------------------------------------------------
 
@@ -137,6 +138,106 @@ moran_remain
 hist(moran_remain$res)
 abline(v=moran_remain$statistic,col="red")
 
-# dc04 --------------------------------------------------------------------
+# dc04: SIR, CI, ExPr --------------------------------------------------------------------
+
+london <- read_rds("data-dc/london_2017_2.rds.gz.rds")
+class(london) #spatial polygons data frame
+#str(london)
+london %>% as_tibble()
+
+# dc05: GLM --------------------------------------------------------------------
+
+# Fit a poisson GLM.
+model_flu <- glm(
+  Flu_OBS ~ HealthDeprivation, 
+  offset = log(TOTAL_POP), 
+  data = london, 
+  family = poisson)
+
+# Is HealthDeprivation significant?
+summary(model_flu)
+
+# Put residuals into the spatial data.
+london$Flu_Resid <- residuals(model_flu)
+
+# Map the residuals using spplot
+spplot(london, "Flu_Resid")
+
+# Compute the neighborhood structure.
+library(spdep)
+borough_nb <- poly2nb(london)
+
+# Test spatial correlation of the residuals.
+moran.mc(london$Flu_Resid, listw = nb2listw(borough_nb), nsim = 999)
+
+#then, try to add other covariates that could explain outcome (age structure?)
+#if still presenting correlated residuals
+#add spatial term explicity
+#Y=xb+S(x,y)
+#one alternative
+#BYM model
+#S_i ~ N(mean(S_j~i),var_i^2)
+#a type of conditonal autoregression or CAR model
+#use bayesian inference to estimate the parameters
+#carbayes r package
+#bayesx r package
+#spatial variation explained!
 
 
+# dc06: spatial variation explained! --------------------------------------
+
+#Bayesian statistical models return samples 
+#of the parameters of interest (the "posterior" distribution) 
+#based on some "prior" distribution which is then updated by the data. 
+#The Bayesian modeling process returns a number of samples 
+#from which you can compute the mean, or an exceedence probability, 
+#or any other quantity you might compute from a distribution.
+
+
+# BYM-CAR model 
+# (Besag, York and Mollié)
+# conditional autocorrelation
+# https://ij-healthgeographics.biomedcentral.com/articles/10.1186/1476-072X-6-39
+
+model_flu %>% broom::tidy()
+model_flu %>% broom::confint_tidy()
+
+library(R2BayesX)
+
+# Fit a Bayesian GLM
+bayes_flu <- bayesx(Flu_OBS ~ HealthDeprivation, 
+                    offset = log(london$TOTAL_POP), 
+                    family = "poisson", data = as.data.frame(london), 
+                    control = bayesx.control(seed = 17610407))
+
+# Summarize it                    
+summary(bayes_flu)
+
+# Look at the samples from the Bayesian model
+plot(samples(bayes_flu))
+
+# Compute adjacency objects
+borough_nb <- poly2nb(london)
+borough_gra <- nb2gra(borough_nb)
+
+# Fit spatial model
+flu_spatial <- bayesx(
+  Flu_OBS ~ HealthDeprivation + sx(i, bs = "spatial", map = borough_gra),
+  offset = log(london$TOTAL_POP),
+  family = "poisson", data = data.frame(london), 
+  control = bayesx.control(seed = 17610407)
+)
+
+# Summarize the model
+summary(flu_spatial)
+
+# Map the fitted spatial term only (#Markov Random Field)
+london$spatial <- fitted(flu_spatial, term = "sx(i):mrf")[, "Mean"]
+spplot(london, zcol = "spatial")
+
+# Map the residuals
+london$spatial_resid <- residuals(flu_spatial)[, "mu"]
+spplot(london, zcol = "spatial_resid")
+
+# Test residuals for spatial correlation
+moran.mc(london$spatial_resid, nb2listw(borough_nb), 999)
