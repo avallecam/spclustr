@@ -1,6 +1,5 @@
 #' ---
-#' title: "bivariate point pattern"
-#' subtitle: "mape_r-01"
+#' title: "mape_r-01: bivariate point pattern"
 #' author: "Andree Valle-Campos"
 #' date: "13/2/2020"
 #' output: 
@@ -23,12 +22,49 @@ knitr::opts_chunk$set(echo = TRUE,
 options(knitr.kable.NA = '.',digits = 2)
 
 #' 
+#' # objetivo
+#' 
+## ----echo=FALSE----------------------------------------------------------
+# cargar paquete
+library(readr)
+library(spatstat)
+
+# importar datos
+preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
+
+# dividir ppp
+crime_splits <- split(preston_crime)
+#crime_splits
+plot(crime_splits)
+
+# estimar densidad
+crime_densities <- density(crime_splits)
+#crime_densities
+plot(crime_densities)
+
+# generar fracción de densidad ~ riesgo relativo
+frac_violent_crime_density <- crime_densities[[2]] / 
+  (crime_densities[[1]] + crime_densities[[2]])
+
+#png("figure/fractional_density.png"),width = 600,height = 600)
+plot(frac_violent_crime_density)
+#dev.off()
+
+#' 
+## ----echo=FALSE,fig.cap="", out.width =  '450px',echo=FALSE,fig.align='center'----
+knitr::include_graphics("figure/dc-05-case-segregation_map-mc_prob_pval.png")
+
+#' 
+## ----echo=FALSE,fig.cap="", out.width =  '450px',echo=FALSE,fig.align='center'----
+knitr::include_graphics("figure/dc-06-case_prob_pval_map-signif.png")
+
+#' 
 #' # load packages
 #' 
 ## ------------------------------------------------------------------------
 # once per session
 library(tidyverse)
-#library(spatstat)
+library(spatstat)
 #library(sf)
 
 # additional configuration
@@ -39,7 +75,7 @@ set.seed(33)
 #' # import data
 #' 
 ## ------------------------------------------------------------------------
-preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
+preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
 
 #' 
 #' ## explore the object
@@ -51,8 +87,7 @@ preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
 ## class(preston_crime)
 ## # ppp is a class from the spatstat package
 ## 
-## # Load the spatstat package
-## library(spatstat)
+## # explore with spatstat specific print
 ## preston_crime %>% print.ppp()
 ## 
 ## # Get some summary information on the dataset
@@ -84,8 +119,6 @@ preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
 
 #' 
 #' # transform data
-#' 
-#' el 
 #' 
 ## ------------------------------------------------------------------------
 
@@ -181,6 +214,7 @@ house %>%
 house %>% 
   ggplot(aes(x = x)) +
   geom_histogram()
+# default: bins = 30
 
 house %>% 
   ggplot(aes(x = x)) +
@@ -258,7 +292,8 @@ house %>%
 #' 
 #' ### how to choose the better bandwidth?
 #' 
-## ----echo=FALSE----------------------------------------------------------
+## ------------------------------------------------------------------------
+# r function ----------------
 ppp2sf <- function (ppp) {
   
   data <- tibble::tibble(x = ppp$x, y = ppp$y)
@@ -294,8 +329,8 @@ window_boundary <- ppp2sf(preston_crime) %>%
   st_as_sf(remove = F,
            crs = 27561, agr = "constant")
 
+# determine the binwidth
 library(maptools)
-
 house_g <- house %>% select(geometry)
 house_poly <- window_boundary %>% st_buffer(dist = 0) %>% st_union() #needs to be cleaner!
 p.sp  <- as(house_g, "Spatial")  # Create Spatial* object
@@ -388,23 +423,35 @@ house %>%
 #' > Standard deviation of isotropic smoothing kernel. Either a numerical value, or a function that computes an appropriate value of sigma.
 #' 
 ## ----eval=FALSE----------------------------------------------------------
+## # cargar paquete
+## library(readr)
+## library(spatstat)
+## 
+## # importar datos
+## preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
+## 
+## # dividir ppp
 ## crime_splits <- split(preston_crime)
+## crime_splits
 ## plot(crime_splits)
+## 
+## # estimar densidad
 ## crime_densities <- density(crime_splits,sigma=h_ppp)
 ## crime_densities
 ## plot(crime_densities)
+## 
+## # generar fracción de densidad ~ riesgo relativo
 ## frac_violent_crime_density <- crime_densities[[2]] /
 ##   (crime_densities[[1]] + crime_densities[[2]])
 ## 
-## #png(paste0("figure/zg-frac_den-pcr_v-ML-",name_community,".png"),width = 600,height = 600)
+## #png("figure/fractional_density.png"),width = 600,height = 600)
 ## plot(frac_violent_crime_density)
 ## #dev.off()
 
 #' 
 #' # ending
 #' 
-## ----eval=FALSE,echo=FALSE,message=FALSE---------------------------------
-## #generar material para estudiantes
+## ----eval=FALSE,echo=TRUE,message=FALSE----------------------------------
+## #generar material en R
 ## knitr::purl("mape_r-01.Rmd", output = "mape_r-01.R", documentation = 2)
-## #purl("r02.Rmd", output = "r02.R", documentation = 2)
 
