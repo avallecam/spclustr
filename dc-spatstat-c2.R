@@ -653,9 +653,10 @@ bind_rows(final_db_sum,prob.threshold_summary) %>%
 library(tidyverse)
 library(spatstat)
 library(haven)
+library(sf)
 theme_set(theme_bw())
 
-gpsrino_p <- read_dta("../../R_/elixr/data/z0_ind_viv_t3.dta") %>% 
+gpsrino_p <- read_dta("../../elixr/data/z0_ind_viv_t3.dta") %>% 
   as_factor() 
 
 base::levels(gpsrino_p$community_1)
@@ -719,6 +720,7 @@ house
 p.sp
 p.ppp
 summary(p.ppp)
+plot(p.ppp)
 # add window -------
 #str(p.ppp)
 #str(house_poly)
@@ -726,11 +728,12 @@ summary(p.ppp)
 #class(house_poly)
 Window(p.ppp) <- as.owin(as(house_poly, "Spatial"))
 summary(p.ppp)
+plot(p.ppp)
 # split, explore, density, fractional ---------------
 preston_crime <- p.ppp
 crime_splits <- split(preston_crime)
 plot(crime_splits)
-crime_densities <- density(crime_splits)
+crime_densities <- density(crime_splits,0.0002)
 crime_densities
 plot(crime_densities)
 frac_violent_crime_density <- crime_densities[[2]] / 
