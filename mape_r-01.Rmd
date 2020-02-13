@@ -30,7 +30,7 @@ library(readr)
 library(spatstat)
 
 # importar datos
-preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
+preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
 
 # dividir ppp
 crime_splits <- split(preston_crime)
@@ -75,7 +75,7 @@ set.seed(33)
 # import data
 
 ```{r}
-preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
+preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
 ```
 
 ## explore the object
@@ -428,7 +428,7 @@ library(readr)
 library(spatstat)
 
 # importar datos
-preston_crime <- read_rds("data-dc/pcrime-spatstat.rds.gz.rds")
+preston_crime <- read_rds("pcrime-spatstat.rds.gz.rds")
 
 # dividir ppp
 crime_splits <- split(preston_crime)
