@@ -6,7 +6,7 @@ Solucitions and remakes of spatial statistics tutorials, vignettes and papers
 
 # Club de Análisis Espacial
 
-## Sesión #5
+## Sesión #5: mapea_r-01 (_/mapear/_)
 
 - clase: [aquí](https://avallecam.github.io/spclustr/mape_r-01.html)
 - rstudio cloud: [aquí](https://rstudio.cloud/project/945236)
