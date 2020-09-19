@@ -2,6 +2,8 @@ library(scanstatistics)
 library(tidyverse)
 library(magrittr)
 library(sp)
+library(tsibble)
+#pedestrian %>% tsibble::has_gaps()
 
 # parameters --------------------------------------------------------------
 
@@ -25,6 +27,7 @@ NM_map %>% as_tibble()
 NM_geo %>% as_tibble()
 
 NM_map %>% as_tibble() %>% count(county)
+NM_geo %>% as_tibble() %>% count(county) 
 
 # Plot map with labels at centroids
 ggplot() + 
@@ -41,9 +44,49 @@ data(NM_popcas)
 head(NM_popcas)
 
 NM_popcas %>% as_tibble()
-
+NM_popcas %>% as_tibble() %>% count(county) #32 counties
 NM_popcas %>% count(year)
 
+#we do have zero counts!
+NM_popcas %>% as_tibble() %>% skimr::skim(count)
+
+NM_popcas %>% 
+  as_tibble() %>% 
+  count(county,sort = T) %>% 
+  count(n)
+
+NM_popcas %>% 
+  as_tibble() %>% 
+  filter(count==0) %>% 
+  count(county,sort = T)
+
+NM_popcas %>% 
+  as_tibble() %>% 
+  as_tsibble(key = county,index = year) %>% #glimpse()
+  naniar::replace_with_na(replace = list(count=0)) %>% 
+  #I lost one complete county because it always had 0
+  filter(!is.na(count)) %>% 
+  #naniar::vis_miss()
+  #has_gaps(.full = TRUE) %>% count(.gaps)
+  #count_gaps(.full = TRUE) %>% arrange(desc(.n))
+  group_by(county) %>% 
+  fill_gaps(count=0L,population=mean(population),.full = TRUE) %>% 
+  #naniar::vis_miss()
+  as_tibble() %>% 
+  count(county)
+
+NM_popcas %>% 
+  as_tibble() %>% 
+  ggplot(aes(x = year,y = count)) +
+  geom_line() +
+  facet_wrap(~county)
+
+NM_popcas %>% 
+  as_tibble() %>% 
+  mutate(rate=count/population*10^6) %>% 
+  ggplot(aes(x = year,y = rate)) +
+  geom_line() +
+  facet_wrap(~county)
 
 # problem -----------------------------------------------------------------
 
