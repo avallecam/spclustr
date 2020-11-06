@@ -375,7 +375,7 @@ ss.options(list(CaseFile="NM.cas",StartDate="1973/1/1",EndDate="1991/12/31",
                 AnalysisType=3#,
                 #0=Discrete Poisson
                 #ModelType=0
-                ))
+))
 ss.options(c("NonCompactnessPenalty=0", "ReportGiniClusters=n", "LogRunToHistoryFile=n"))
 
 write.ss.prm(td,"testnm")

@@ -6,7 +6,7 @@
 
 # The R package is not on CRAN because it uses some external C libraries that make difficult to build the binaries.
 # Therefore, we need to install it adding the URL of the INLA repository:
-  
+
 #install.packages("INLA", repos = "https://inla.r-inla-download.org/R/stable", dep = TRUE)
 
 library(tidyverse)
@@ -133,7 +133,7 @@ ggplot(marginal, aes(x = x, y = y)) +
   labs(x = expression(beta[1]), 
        y = "Density") +
   theme_bw()
-  
+
 head(res$summary.fitted.values)
 
 map$RR <- res$summary.fitted.values[, "mean"]

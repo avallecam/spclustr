@@ -242,11 +242,17 @@ spdf <- inlmisc::Grid2Polygons(rast)
 #convert polygon to sf
 sf_polygon <- st_as_sf(spdf)
 #plot geometric points and polygon
+library(ggspatial)
 ggplot() +
   geom_point(aes(x,y),data = house %>% filter(marks=="Violent crime"), color="red", size=1.5) +
   geom_point(aes(x,y),data = house %>% filter(marks!="Violent crime"), color="black",size=0.5, alpha=0.5) +
   geom_sf(data = sf_polygon,alpha=0) +
-  coord_sf()
+  coord_sf() +
+  annotation_scale(location = "bl", width_hint = 0.2) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.75, "in"), 
+                         pad_y = unit(0.5, "in"),
+                         style = north_arrow_fancy_orienteering)
 ggsave("figure/dc-06-case_prob_pval_map-signif.png",height = 10,width = 10)
   #geom_sf(data = house)
 #tm_shape(sf_polygon) + tm_borders()
@@ -753,6 +759,10 @@ bw_choice <- spseg(
 plotcv(bw_choice)
 abline(v = bw_choice$hcv, lty = 2, col = "red")
 print(bw_choice$hcv)
+
+# #option two
+# bw.ppl(preston_crime)
+# bw.scott(preston_crime)
 
 # segregation probabilities --------------------------
 seg <- spseg(pts = preston_crime, h = bw_choice$hcv, opt = 3,

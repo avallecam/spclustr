@@ -451,7 +451,7 @@ plot(frac_violent_crime_density)
 
 # ending
 
-```{r,eval=TRUE,echo=TRUE,message=FALSE}
+```{r,eval=FALSE,echo=TRUE,message=FALSE}
 #generar material en R
 knitr::purl("mape_r-01.Rmd", output = "mape_r-01.R", documentation = 2)
 ```

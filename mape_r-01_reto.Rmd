@@ -29,6 +29,7 @@ options(knitr.kable.NA = '.',digits = 2)
 ```{r}
 library(tidyverse)
 library(sf)
+library(ggspatial)
 
 ncovdb_china <- read_rds("ncovdb_china.rds")
 
@@ -42,7 +43,12 @@ ncovdb_china %>%
   geom_sf(alpha=0.5) +
   coord_sf() + 
   borders(database = "world",regions = "China") +
-  theme_void()
+  theme_void() +
+  annotation_scale(location = "bl", width_hint = 0.2) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.25, "in"), 
+                         pad_y = unit(0.3, "in"),
+                         style = north_arrow_fancy_orienteering)
 ```
 
 ```{r}
@@ -205,7 +211,7 @@ ncovdb_china <- read_xxx("nombre_del_archivo.xxx")
 ncovdb_china %>%
   count(variable_uno, variable_dos, variable_tres) %>% 
   st_as_sf(argumento_coordinadas = c("aqui_va_longitud", "aqui_va_latitud"), 
-           argumento_otros = opcion_otros) %>% 
+           argumento_otros = ver_opciones_en_la_clase_anterior) %>% 
   ggplot(aes(estetica_uno = variable_uno, estetica_dos = variable_dos)) +
   geom_cual(estetica_tres = un_numero) +
   coord_cual() + 
@@ -281,5 +287,6 @@ ncovdb_china %>% write_rds("ncovdb_china.rds")
 
 ## Más práctica
 
+- https://www.r-spatial.org/r/2018/10/25/ggplot2-sf.html
 - https://eriqande.github.io/rep-res-eeb-2017/map-making-in-R.html#map-making-intro
 - https://www.youtube.com/watch?v=5_6O2oDy5Jk
