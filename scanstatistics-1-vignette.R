@@ -50,16 +50,19 @@ NM_popcas %>% count(year)
 #we do have zero counts!
 NM_popcas %>% as_tibble() %>% skimr::skim(count)
 
+# problem 1: 32 counties x 19 times
 NM_popcas %>% 
   as_tibble() %>% 
   count(county,sort = T) %>% 
   count(n)
 
+# problem 2: 28 countieswith 0 counts
 NM_popcas %>% 
   as_tibble() %>% 
   filter(count==0) %>% 
   count(county,sort = T)
 
+# problem 3: 31 counties x 19 times
 NM_popcas %>% 
   as_tibble() %>% 
   as_tsibble(key = county,index = year) %>% #glimpse()
@@ -133,7 +136,7 @@ zones <- NM_geo %>%
   as.matrix() %>%
   spDists(x = ., y = ., longlat = TRUE) %>%
   dist_to_knn(k = k_predefined) %>%
-  knn_zones
+  knn_zones()
 
 # __ baselines ------------------------------------------------------------
 
@@ -142,7 +145,7 @@ mod <- glm(count ~ offset(log(population)) + 1 + I(year - baseline_last),
            family = poisson(link = "log"),
            data = NM_popcas %>% filter(year < baseline_last+1))
 
-mod %>% avallecam::epi_tidymodel_coef()
+mod %>% epitidy::epi_tidymodel_coef()
 NM_popcas %>% filter(year < baseline_last+1) %>% as_tibble()
 mod %>% broom::augment()
 
@@ -157,7 +160,7 @@ ebp_baselines <- NM_popcas %>%
 # y ~ a + b*x
 # glm(y ~ I(x-x0)-1, offset=y0)
 # the expression centers the coeficient
-# thte additional +1 do not affect the coefficient estimate
+# the additional +1 do not affect the coefficient estimate
 # this is what we are modeling
 NM_popcas %>% 
   filter(year < baseline_last+1) %>% #as_tibble() %>% 
