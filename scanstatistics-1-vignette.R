@@ -167,6 +167,15 @@ NM_popcas %>%
   count(year) %>% 
   mutate(new=year-baseline_last+1)
 
+
+# pre ---------------------------------------------------------------------
+
+# MUST HAVE THE SAME NUMBER OF UNITS / DISTRICTS / UBIGEOS
+counts %>% dim()
+ebp_baselines %>% dim()
+NM_geo %>% count()
+zones
+
 # __ calculation ----------------------------------------------------------
 
 set.seed(1)
